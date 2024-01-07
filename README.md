@@ -14,3 +14,8 @@ Therefore I gave up the JNI approach and doing this IPC approach.
 
 - gcc / libncurses / kotlinc
 - native-image from GraalVM (optional)
+
+## TODO
+
+- Separate read & write thread
+- Add more useful example
