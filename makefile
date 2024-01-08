@@ -2,7 +2,7 @@ OUTPUT_DIRECTORY = bin
 
 all:
 	mkdir -p $(OUTPUT_DIRECTORY)
-	gcc jcurses.c -o $(OUTPUT_DIRECTORY)/jcurses -lncurses
+	gcc jcurses.c -o $(OUTPUT_DIRECTORY)/jcurses -lncurses -lpthread
 	kotlinc -include-runtime main.kt -d  $(OUTPUT_DIRECTORY)/main.jar
 
 run:

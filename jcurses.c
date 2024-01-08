@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <pthread.h>
 #include <string.h>
 #include <ncurses.h>
 #include <sys/socket.h>
@@ -12,36 +13,44 @@
 
 int main();
 int prepare_socket();
-void loop(int socket);
+void loop_key(int socket);
+void *loop_event(void* args);
+void init_thread(int socket);
 void init_ncurses();
 
 int main() {
     int socket = prepare_socket();
     init_ncurses();
-    loop(socket);
-    endwin();
+    init_thread(socket);
+    loop_key(socket);
     return 0;
 }
 
-void loop(int socket) {
-    short width, height;
-    for (short key = 0, index = 0;; key = getch()) {
+void loop_key(int socket) {
+    for (short key = 0, index = 0, width, height;; key = getch()) {
         getmaxyx(stdscr, height, width);
         short send[3] = { key, width, height };
         write(socket, &send, sizeof(send));
-
-        char buffer[1];
-        do {
-            read(socket, buffer, 1);
-            int instruction = buffer[0];
-            int result = jncurses_protocol_execute(socket, instruction);
-            if (result == JNCURSES_EXIT) {
-                write(socket, 0, 0);
-                return;
-            };
-            if (result == JNCURSES_NEXT) break;
-        } while (1);
     }
+}
+
+void *loop_event(void *args) {
+    long socket = (long) args;
+    char buffer[1];
+    while (1) {
+        read(socket, buffer, 1);
+        int instruction = buffer[0];
+        if (jncurses_protocol_execute(socket, instruction)) {
+            endwin();
+            exit(0);
+            break;
+        };
+    }
+}
+
+void init_thread(int socket) {
+    pthread_t thread;
+    pthread_create(&thread, NULL, loop_event, (void *)((long) socket));
 }
 
 int prepare_socket() {

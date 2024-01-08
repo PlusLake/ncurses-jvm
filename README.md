@@ -17,5 +17,5 @@ Therefore I gave up the JNI approach and doing this IPC approach.
 
 ## TODO
 
-- Separate read & write thread
-- Add more useful example
+- [x] Separate read & write thread
+- [ ] Add more useful example

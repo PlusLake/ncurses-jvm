@@ -12,13 +12,14 @@ fun main() {
         .also(ProcessBuilder::inheritIO)
         .start()
         .waitFor()
-        .also(::println)
+        .also { println("Exit code of jcurses: $it") }
 }
 
 fun render() : Render {
     val array = ShortArray(20)
     var cursor = 0
     return fun(signal, display) {
+        Thread.sleep(1)
         if (signal.key.toInt().toChar() == 'q') {
             display.exit()
             System.exit(0)
@@ -58,20 +59,18 @@ fun socket(channel: ServerSocketChannel, callback: Render) = with (channel.accep
             .order(ByteOrder.LITTLE_ENDIAN)
             .let { Signal(it.short, it.short, it.short) }
             .also { callback(it, display) }
-        display.next()
     }
 }
 
 class Display(val out: OutputStream) {
     fun exit() = out.write(byteArrayOf(0))
-    fun next() = out.write(byteArrayOf(1))
     fun print(string: String) = string
         .toByteArray()
         .let {
             ByteBuffer
                 .allocate(it.size + 5)
                 .order(ByteOrder.LITTLE_ENDIAN)
-                .put(2)
+                .put(1)
                 .putInt(it.size)
                 .put(it)
         }
@@ -80,12 +79,12 @@ class Display(val out: OutputStream) {
     fun move(x: Int, y: Int) = ByteBuffer
         .allocate(5)
         .order(ByteOrder.LITTLE_ENDIAN)
-        .put(3)
+        .put(2)
         .putShort(x.toShort())
         .putShort(y.toShort())
         .array()
         .also(out::write)
-    fun clear() = out.write(byteArrayOf(4))
+    fun clear() = out.write(byteArrayOf(3))
 }
 
 data class Signal(val key: Short, val width: Short, val height: Short)

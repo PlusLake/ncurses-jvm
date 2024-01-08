@@ -4,7 +4,6 @@
 #include <ncurses.h>
 
 #define JNCURSES_EXIT 1
-#define JNCURSES_NEXT 2
 
 /** Exit ncurses gracefully. */
 void jncurses_protocol_error(const char* format, ...) {
@@ -21,11 +20,6 @@ int jncurses_protocol_exit(int socket) {
     return JNCURSES_EXIT;
 }
 
-/** End the turn and wait for next key */
-int jncurses_protocol_next(int socket) {
-    return JNCURSES_NEXT;
-}
-
 /** Read bytes from the unix socket and print with ncurses. */
 int jncurses_protocol_print(int socket) {
     char size[4];
@@ -36,6 +30,7 @@ int jncurses_protocol_print(int socket) {
     int bytes_to_read = *((int *) size);
     length = read(socket, buffer, bytes_to_read);
     printw("%.*s", length, buffer);
+    refresh();
     return 0;
 }
 
@@ -61,7 +56,6 @@ int jncurses_protocol_clear(int socket) {
 int jncurses_protocol_execute(int socket, int instruction) {
     int (*protocols[]) (int) = {
         jncurses_protocol_exit,
-        jncurses_protocol_next,
         jncurses_protocol_print,
         jncurses_protocol_move,
         jncurses_protocol_clear,
